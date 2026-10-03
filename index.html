@@ -51,7 +51,36 @@
 <body>
 <div id="loading" class="loading-mask">云端数据同步中，请稍候...</div>
 <div id="app"></div>
+// 从云端加载数据（带 3 秒超时限制）
+async function load() {
+  showLoading(true);
+  
+  // 创建 3 秒超时控制，避免一直卡住
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 3000);
 
+  try {
+    const res = await fetch(API_URL, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (!res.ok) throw new Error("网络响应异常");
+    const cloudData = await res.json();
+    db = cloudData && typeof cloudData === "object" ? cloudData : structuredClone(defaultData);
+    if (!db.settings) db.settings = structuredClone(defaultData.settings);
+    if (!db.students) db.students = [];
+    if (!db.attendance) db.attendance = [];
+    if (!db.leaves) db.leaves = [];
+    localStorage.setItem(KEY, JSON.stringify(db));
+  } catch (e) {
+    console.warn("读取云端数据超时或失败，自动切换至本地缓存:", e);
+    try {
+      const local = localStorage.getItem(KEY);
+      if (local) db = JSON.parse(local);
+    } catch (err) {}
+  } finally {
+    clearTimeout(timeoutId);
+    showLoading(false); // 强制关闭加载动画
+  }
+}
 <script>
 const API_URL = "https://api.npoint.io/4b62fe95253ec90ef087";
 const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"; // 需替换为您在 Google Cloud 申请的 Client ID
