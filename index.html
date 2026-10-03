@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>宽柔中学至达城 · 吉他社 Console</title>
+<!-- 引入 Google 登录 SDK -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;background:#f7f7f7;color:#1a2a3a;font-family:"KaiTi","STKaiti","楷体",serif}
@@ -52,6 +54,8 @@
 
 <script>
 const API_URL = "https://api.npoint.io/4b62fe95253ec90ef087";
+const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"; // 需替换为您在 Google Cloud 申请的 Client ID
+const SCHOOL_EMAIL_DOMAIN = "@foonyewsa.edu.my"; // 限制学校域名
 const KEY = "kca_console_v1";
 
 const defaultData = {
@@ -68,6 +72,20 @@ function showLoading(show) {
   if (el) el.style.display = show ? "flex" : "none";
 }
 
+// 解码 JWT Token
+function parseJwt(token) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+}
+
 // 从云端加载数据
 async function load() {
   showLoading(true);
@@ -82,7 +100,7 @@ async function load() {
     if (!db.leaves) db.leaves = [];
     localStorage.setItem(KEY, JSON.stringify(db));
   } catch (e) {
-    console.warn("读取云端数据失败，尝试读取本地缓存:", e);
+    console.warn("读取云端数据失败，读取本地缓存:", e);
     try {
       const local = localStorage.getItem(KEY);
       if (local) db = JSON.parse(local);
@@ -104,7 +122,7 @@ async function save() {
     });
     if (!res.ok) throw new Error("云端更新失败");
   } catch (e) {
-    alert("警告：数据已同步保存至本地，但云端同步失败，请检查网络后再试！");
+    alert("警告：数据已保存至本地，但云端同步失败，请检查网络后再试！");
   } finally {
     showLoading(false);
   }
@@ -324,7 +342,7 @@ function pageSettings(){
  <div class="grid"><div><label>学校名称</label><input id="school" value="${esc(db.settings.school)}"></div><div><label>社团名称</label><input id="club" value="${esc(db.settings.club)}"></div><div><label>负责人账号</label><input id="adminUser" value="${esc(db.settings.adminUser)}"></div><div><label>负责人新密码</label><input id="adminPass" type="password" placeholder="留空则不修改"></div></div>
  <div class="actions"><button class="btn" onclick="saveSettings()">保存设置</button><button class="btn secondary" onclick="resetDemo()">重置为空白资料</button></div>
  </div>
- <div class="card"><h3>日期规则与云端同步</h3><p>系统会自动判断星期。Tuesday / Friday 都可以点名；Friday 的「正课」和「留校」是两条独立记录。</p><p>数据已实时对接至云端数据库（npoint API），多端修改将自动同步。</p></div>`;
+ <div class="card"><h3>日期规则与安全限制</h3><p>学生必须使用宽柔中学至达城分校官方 Google 邮箱（<code>@foonyewsa.edu.my</code>）登录后，方可查询个人出缺席记录。</p></div>`;
 }
 
 async function saveSettings(){
@@ -344,13 +362,74 @@ async function resetDemo(){
   }
 }
 
+// 学生登录与查询
 function renderStudentSearch(){
+ const studentUser = JSON.parse(sessionStorage.getItem("kca_student") || "null");
+
  document.getElementById("app").innerHTML=`
  <header><div><h1>${esc(db.settings.school)} · ${esc(db.settings.club)}</h1><small>STUDENT ATTENDANCE CONSOLE</small></div><button class="btn secondary" onclick="render()">负责人入口</button></header>
  <main class="container"><div class="card">
- <h2>学生出缺席查询</h2><p>请输入自己的学号，只会显示该学号的记录。</p>
- <div class="grid"><div><label>学号</label><input id="searchId" placeholder="请输入学号"></div><div><label>年份</label><select id="searchYear">${years().map(y=>`<option>${y}</option>`).join("")}</select></div></div>
- <div class="actions"><button class="btn" onclick="studentResult()">查询</button></div></div><div id="studentResult"></div></main>`;
+ <h2>学生出缺席查询</h2>
+ ${!studentUser ? `
+   <p>为了保障隐私，请先使用学校官方 Google 账号（<code>${SCHOOL_EMAIL_DOMAIN}</code>）登录以验证身份：</p>
+   <div style="margin: 15px 0;">
+     <div id="g_id_onload"
+          data-client_id="${GOOGLE_CLIENT_ID}"
+          data-callback="handleGoogleLogin">
+     </div>
+     <div class="g_id_signin" data-type="standard"></div>
+   </div>
+ ` : `
+   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background:#f0f0f0; padding:10px; border-radius:4px;">
+     <span>登录身份：<b>${esc(studentUser.name)}</b> (${esc(studentUser.email)})</span>
+     <button class="btn secondary" onclick="studentLogout()">退出登录</button>
+   </div>
+   <div class="grid">
+     <div><label>学号</label><input id="searchId" placeholder="请输入学号" value="${esc(studentUser.defaultIdNo||'')}"></div>
+     <div><label>年份</label><select id="searchYear">${years().map(y=>`<option>${y}</option>`).join("")}</select></div>
+   </div>
+   <div class="actions"><button class="btn" onclick="studentResult()">查询记录</button></div>
+ `}
+ </div><div id="studentResult"></div></main>`;
+
+ if (!studentUser && window.google) {
+   google.accounts.id.initialize({
+     client_id: GOOGLE_CLIENT_ID,
+     callback: handleGoogleLogin
+   });
+   google.accounts.id.renderButton(
+     document.querySelector(".g_id_signin"),
+     { theme: "outline", size: "large" }
+   );
+ }
+}
+
+function handleGoogleLogin(response) {
+ const payload = parseJwt(response.credential);
+ if (!payload || !payload.email) {
+   alert("登录验证失败，请重试。");
+   return;
+ }
+
+ if (!payload.email.endsWith(SCHOOL_EMAIL_DOMAIN)) {
+   alert(`验证失败：请使用学校官方 Google 账号（${SCHOOL_EMAIL_DOMAIN}）登录！`);
+   return;
+ }
+
+ const studentData = {
+   email: payload.email,
+   name: payload.name,
+   defaultIdNo: payload.email.split('@')[0]
+ };
+ 
+ sessionStorage.setItem("kca_student", JSON.stringify(studentData));
+ alert(`验证成功！欢迎你，${payload.name}`);
+ renderStudentSearch();
+}
+
+function studentLogout() {
+ sessionStorage.removeItem("kca_student");
+ renderStudentSearch();
 }
 
 function studentResult(){
