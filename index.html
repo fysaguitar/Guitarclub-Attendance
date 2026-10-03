@@ -1,302 +1,603 @@
 <!DOCTYPE html>
+
 <html lang="zh-CN">
+
 <head>
+
 <meta charset="UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>宽柔中学至达城 · 吉他社 Console</title>
+
 <style>
-  *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:#f7f7f7;color:#000;font-family:"KaiTi","STKaiti","楷体",serif}
-  button,input,select,textarea{font:inherit;color:#000}
-  .app{min-height:100vh}
-  header{background:#000;color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;gap:20px}
-  header h1{font-size:22px;margin:0;font-weight:700}
-  header small{font-family:Consolas,"Courier New",monospace;letter-spacing:1px}
-  .container{max-width:1200px;margin:0 auto;padding:22px}
-  .nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
-  .nav button{border:1px solid #000;background:#fff;padding:9px 15px;cursor:pointer}
-  .nav button.active,.nav button:hover{background:#000;color:#fff}
-  .card{background:#fff;border:1px solid #bbb;padding:18px;margin-bottom:18px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
-  label{display:block;font-weight:700;margin-bottom:5px}
-  input,select,textarea{width:100%;padding:9px;border:1px solid #888;background:#fff}
-  textarea{min-height:70px;resize:vertical}
-  .btn{border:1px solid #000;background:#000;color:#fff;padding:9px 14px;cursor:pointer}
-  .btn.secondary{background:#fff;color:#000}
-  .btn.danger{background:#fff;color:#000;border-color:#900}
-  .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-  .notice{padding:10px;border-left:4px solid #000;background:#f0f0f0;margin:10px 0}
-  .table-wrap{overflow:auto}
-  table{border-collapse:collapse;width:100%;min-width:780px}
-  th,td{border:1px solid #bbb;padding:8px;text-align:left;vertical-align:middle}
-  th{background:#eee}
-  .status{display:flex;gap:5px;flex-wrap:wrap}
-  .status button{padding:6px 8px;border:1px solid #777;background:#fff;cursor:pointer}
-  .status button.selected{background:#000;color:#fff;border-color:#000}
-  .pill{display:inline-block;border:1px solid #000;padding:3px 8px;margin:2px}
-  .hidden{display:none!important}
-  .center{text-align:center}
-  .login{max-width:430px;margin:70px auto}
-  .login h2{text-align:center}
-  .muted{color:#555}
-  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-  .stat{border:1px solid #aaa;padding:14px;text-align:center;background:#fff}
-  .stat b{font-size:25px;display:block}
-  @media(max-width:700px){.container{padding:12px}.stat-grid{grid-template-columns:repeat(2,1fr)}header{align-items:flex-start;flex-direction:column}}
+
+  *{box-sizing:border-box}
+
+  html,body{margin:0;padding:0;background:#f7f7f7;color:#000;font-family:"KaiTi","STKaiti","楷体",serif}
+
+  button,input,select,textarea{font:inherit;color:#000}
+
+  .app{min-height:100vh}
+
+  header{background:#000;color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;gap:20px}
+
+  header h1{font-size:22px;margin:0;font-weight:700}
+
+  header small{font-family:Consolas,"Courier New",monospace;letter-spacing:1px}
+
+  .container{max-width:1200px;margin:0 auto;padding:22px}
+
+  .nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+
+  .nav button{border:1px solid #000;background:#fff;padding:9px 15px;cursor:pointer}
+
+  .nav button.active,.nav button:hover{background:#000;color:#fff}
+
+  .card{background:#fff;border:1px solid #bbb;padding:18px;margin-bottom:18px}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+
+  label{display:block;font-weight:700;margin-bottom:5px}
+
+  input,select,textarea{width:100%;padding:9px;border:1px solid #888;background:#fff}
+
+  textarea{min-height:70px;resize:vertical}
+
+  .btn{border:1px solid #000;background:#000;color:#fff;padding:9px 14px;cursor:pointer}
+
+  .btn.secondary{background:#fff;color:#000}
+
+  .btn.danger{background:#fff;color:#000;border-color:#900}
+
+  .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+
+  .notice{padding:10px;border-left:4px solid #000;background:#f0f0f0;margin:10px 0}
+
+  .table-wrap{overflow:auto}
+
+  table{border-collapse:collapse;width:100%;min-width:780px}
+
+  th,td{border:1px solid #bbb;padding:8px;text-align:left;vertical-align:middle}
+
+  th{background:#eee}
+
+  .status{display:flex;gap:5px;flex-wrap:wrap}
+
+  .status button{padding:6px 8px;border:1px solid #777;background:#fff;cursor:pointer}
+
+  .status button.selected{background:#000;color:#fff;border-color:#000}
+
+  .pill{display:inline-block;border:1px solid #000;padding:3px 8px;margin:2px}
+
+  .hidden{display:none!important}
+
+  .center{text-align:center}
+
+  .login{max-width:430px;margin:70px auto}
+
+  .login h2{text-align:center}
+
+  .muted{color:#555}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+
+  .stat{border:1px solid #aaa;padding:14px;text-align:center;background:#fff}
+
+  .stat b{font-size:25px;display:block}
+
+  @media(max-width:700px){.container{padding:12px}.stat-grid{grid-template-columns:repeat(2,1fr)}header{align-items:flex-start;flex-direction:column}}
+
 </style>
+
 </head>
+
 <body>
+
 <div id="app"></div>
 
+
+
 <script>
+
 const KEY="kca_console_v1";
+
 const defaultData={
-  settings:{school:"宽柔中学至达城",club:"吉他社",adminUser:"admin",adminPass:"guitar2026"},
-  students:[],
-  attendance:[],
-  leaves:[]
+
+  settings:{school:"宽柔中学至达城",club:"吉他社",adminUser:"admin",adminPass:"guitar2026"},
+
+  students:[],
+
+  attendance:[],
+
+  leaves:[]
+
 };
 
+
+
 function load(){
-  try{return JSON.parse(localStorage.getItem(KEY))||structuredClone(defaultData)}
-  catch(e){return structuredClone(defaultData)}
+
+  try{return JSON.parse(localStorage.getItem(KEY))||structuredClone(defaultData)}
+
+  catch(e){return structuredClone(defaultData)}
+
 }
+
 let db=load();
+
 function save(){localStorage.setItem(KEY,JSON.stringify(db))}
+
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+
 function today(){return new Date().toISOString().slice(0,10)}
+
 function weekday(date){return new Intl.DateTimeFormat("en-US",{weekday:"long"}).format(new Date(date+"T12:00:00"))}
+
 function fmt(date){return new Intl.DateTimeFormat("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(date+"T12:00:00"))}
+
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+
 function isLogged(){return sessionStorage.getItem("kca_admin")==="1"}
 
+
+
 function render(){
-  if(!isLogged()) return renderLogin();
-  renderAdmin();
+
+  if(!isLogged()) return renderLogin();
+
+  renderAdmin();
+
 }
+
 function renderLogin(){
- document.getElementById("app").innerHTML=`
- <div class="login card">
-   <h2>${esc(db.settings.school)}</h2>
-   <p class="center">🎸 ${esc(db.settings.club)}</p>
-   <p class="center"><b>ATTENDANCE CONSOLE</b></p>
-   <div style="margin-top:20px">
-     <label>负责人账号</label><input id="loginUser" value="admin">
-     <label style="margin-top:10px">密码</label><input id="loginPass" type="password">
-     <div class="actions"><button class="btn" onclick="login()">登入负责人系统</button><button class="btn secondary" onclick="renderStudentSearch()">学生查询</button></div>
+
+ document.getElementById("app").innerHTML=`
+
+ <div class="login card">
+
+   <h2>${esc(db.settings.school)}</h2>
+
+   <p class="center">🎸 ${esc(db.settings.club)}</p>
+
+   <p class="center"><b>ATTENDANCE CONSOLE</b></p>
+
+   <div style="margin-top:20px">
+
+     <label>负责人账号</label><input id="loginUser" value="admin">
+
+     <label style="margin-top:10px">密码</label><input id="loginPass" type="password">
+
+     <div class="actions"><button class="btn" onclick="login()">登入负责人系统</button><button class="btn secondary" onclick="renderStudentSearch()">学生查询</button></div>
+
      <p class="muted">第一版默认账号：admin / guitar2026</p>
-   </div>
- </div>`;
+
+   </div>
+
+ </div>`;
+
 }
+
 function login(){
- if(document.getElementById("loginUser").value===db.settings.adminUser && document.getElementById("loginPass").value===db.settings.adminPass){
-   sessionStorage.setItem("kca_admin","1"); render();
- } else alert("账号或密码不正确。");
+
+ if(document.getElementById("loginUser").value===db.settings.adminUser && document.getElementById("loginPass").value===db.settings.adminPass){
+
+   sessionStorage.setItem("kca_admin","1"); render();
+
+ } else alert("账号或密码不正确。");
+
 }
+
+
 
 function renderAdmin(){
- const active=sessionStorage.getItem("page")||"attendance";
- document.getElementById("app").innerHTML=`
- <header><div><h1>${esc(db.settings.school)} · ${esc(db.settings.club)}</h1><small>ATTENDANCE CONSOLE</small></div><button class="btn secondary" onclick="logout()">退出</button></header>
- <main class="container">
-   <div class="nav">
-    <button class="${active==='attendance'?'active':''}" onclick="go('attendance')">今日点名</button>
-    <button class="${active==='records'?'active':''}" onclick="go('records')">出缺席记录</button>
-    <button class="${active==='students'?'active':''}" onclick="go('students')">学生名单</button>
-    <button class="${active==='leaves'?'active':''}" onclick="go('leaves')">请假信</button>
-    <button class="${active==='settings'?'active':''}" onclick="go('settings')">系统设置</button>
-    <button onclick="renderStudentSearch()">学生查询</button>
-   </div>
-   <div id="page"></div>
- </main>`;
- if(active==='attendance') pageAttendance();
- if(active==='records') pageRecords();
- if(active==='students') pageStudents();
- if(active==='leaves') pageLeaves();
- if(active==='settings') pageSettings();
+
+ const active=sessionStorage.getItem("page")||"attendance";
+
+ document.getElementById("app").innerHTML=`
+
+ <header><div><h1>${esc(db.settings.school)} · ${esc(db.settings.club)}</h1><small>ATTENDANCE CONSOLE</small></div><button class="btn secondary" onclick="logout()">退出</button></header>
+
+ <main class="container">
+
+   <div class="nav">
+
+    <button class="${active==='attendance'?'active':''}" onclick="go('attendance')">今日点名</button>
+
+    <button class="${active==='records'?'active':''}" onclick="go('records')">出缺席记录</button>
+
+    <button class="${active==='students'?'active':''}" onclick="go('students')">学生名单</button>
+
+    <button class="${active==='leaves'?'active':''}" onclick="go('leaves')">请假信</button>
+
+    <button class="${active==='settings'?'active':''}" onclick="go('settings')">系统设置</button>
+
+    <button onclick="renderStudentSearch()">学生查询</button>
+
+   </div>
+
+   <div id="page"></div>
+
+ </main>`;
+
+ if(active==='attendance') pageAttendance();
+
+ if(active==='records') pageRecords();
+
+ if(active==='students') pageStudents();
+
+ if(active==='leaves') pageLeaves();
+
+ if(active==='settings') pageSettings();
+
 }
+
 function go(p){sessionStorage.setItem("page",p);renderAdmin()}
 
+
+
 function pageAttendance(){
- let date=today(), day=weekday(date);
- document.getElementById("page").innerHTML=`
- <div class="card">
-   <h2>今日点名</h2>
-   <div class="grid">
-    <div><label>日期</label><input id="attDate" type="date" value="${date}" onchange="updateAttendancePreview()"></div>
-    <div><label>星期</label><input id="attDay" value="${day}" disabled></div>
-    <div><label>场次</label><select id="attSession" onchange="updateAttendancePreview()">
-      <option value="正课">正课</option><option value="留校">留校</option>
-    </select></div>
-   </div>
-   <div id="sessionHint" class="notice"></div>
- </div>
- <div class="card"><div id="attendanceTable"></div></div>`;
- updateAttendancePreview();
+
+ let date=today(), day=weekday(date);
+
+ document.getElementById("page").innerHTML=`
+
+ <div class="card">
+
+   <h2>今日点名</h2>
+
+   <div class="grid">
+
+    <div><label>日期</label><input id="attDate" type="date" value="${date}" onchange="updateAttendancePreview()"></div>
+
+    <div><label>星期</label><input id="attDay" value="${day}" disabled></div>
+
+    <div><label>场次</label><select id="attSession" onchange="updateAttendancePreview()">
+
+      <option value="正课">正课</option><option value="留校">留校</option>
+
+    </select></div>
+
+   </div>
+
+   <div id="sessionHint" class="notice"></div>
+
+ </div>
+
+ <div class="card"><div id="attendanceTable"></div></div>`;
+
+ updateAttendancePreview();
+
 }
+
 function updateAttendancePreview(){
- const date=document.getElementById("attDate").value, day=weekday(date), session=document.getElementById("attSession").value;
- document.getElementById("attDay").value=day;
- let hint="";
- if(day==="Tuesday" && session!=="留校") hint="Tuesday 的固定场次是「留校」。如要补录其他场次，请确认后继续。";
- if(day==="Friday") hint=session==="正课"?"Friday · 正课：独立保存，不会覆盖 Friday · 留校。":"Friday · 留校：独立保存，不会覆盖 Friday · 正课。";
- if(day!=="Tuesday" && day!=="Friday") hint="提醒：吉他社通常在 Tuesday / Friday。你仍可以用日期选择器补录其他日期。";
- document.getElementById("sessionHint").textContent=hint;
- const rows=db.students.map(s=>{
-   const r=db.attendance.find(x=>x.date===date&&x.session===session&&x.studentId===s.id);
-   const status=r?.status||"";
-   return `<tr><td>${esc(s.idNo)}</td><td>${esc(s.name)}</td><td><div class="status">
-    ${["出席","缺席","迟到","旷课"].map(st=>`<button class="${status===st?'selected':''}" onclick="setStatus('${s.id}','${esc(st)}')">${st}</button>`).join("")}
-   </div></td><td><input id="note-${s.id}" value="${esc(r?.note||"")}" placeholder="备注"></td><td>${r?.updatedAt?esc(r.updatedAt):"—"}</td></tr>`;
- }).join("");
- document.getElementById("attendanceTable").innerHTML=db.students.length?`
- <div class="table-wrap"><table><thead><tr><th>学号</th><th>姓名</th><th>出缺席</th><th>备注</th><th>更新时间</th></tr></thead><tbody>${rows}</tbody></table></div>
- <div class="actions"><button class="btn" onclick="saveAttendance('${date}','${session}')">保存本场点名</button><button class="btn secondary" onclick="markAll('出席')">全部设为出席</button></div>`:
- `<div class="notice">目前没有学生名单。请先到「学生名单」添加学生。</div>`;
+
+ const date=document.getElementById("attDate").value, day=weekday(date), session=document.getElementById("attSession").value;
+
+ document.getElementById("attDay").value=day;
+
+ let hint="";
+
+ if(day==="Tuesday" && session!=="留校") hint="Tuesday 的固定场次是「留校」。如要补录其他场次，请确认后继续。";
+
+ if(day==="Friday") hint=session==="正课"?"Friday · 正课：独立保存，不会覆盖 Friday · 留校。":"Friday · 留校：独立保存，不会覆盖 Friday · 正课。";
+
+ if(day!=="Tuesday" && day!=="Friday") hint="提醒：吉他社通常在 Tuesday / Friday。你仍可以用日期选择器补录其他日期。";
+
+ document.getElementById("sessionHint").textContent=hint;
+
+ const rows=db.students.map(s=>{
+
+   const r=db.attendance.find(x=>x.date===date&&x.session===session&&x.studentId===s.id);
+
+   const status=r?.status||"";
+
+   return `<tr><td>${esc(s.idNo)}</td><td>${esc(s.name)}</td><td><div class="status">
+
+    ${["出席","缺席","迟到","旷课"].map(st=>`<button class="${status===st?'selected':''}" onclick="setStatus('${s.id}','${esc(st)}')">${st}</button>`).join("")}
+
+   </div></td><td><input id="note-${s.id}" value="${esc(r?.note||"")}" placeholder="备注"></td><td>${r?.updatedAt?esc(r.updatedAt):"—"}</td></tr>`;
+
+ }).join("");
+
+ document.getElementById("attendanceTable").innerHTML=db.students.length?`
+
+ <div class="table-wrap"><table><thead><tr><th>学号</th><th>姓名</th><th>出缺席</th><th>备注</th><th>更新时间</th></tr></thead><tbody>${rows}</tbody></table></div>
+
+ <div class="actions"><button class="btn" onclick="saveAttendance('${date}','${session}')">保存本场点名</button><button class="btn secondary" onclick="markAll('出席')">全部设为出席</button></div>`:
+
+ `<div class="notice">目前没有学生名单。请先到「学生名单」添加学生。</div>`;
+
 }
+
 let pending={};
+
 function setStatus(id,status){
- pending[id]=status;
- document.querySelectorAll(`#attendanceTable tr`).forEach(()=>{});
- const date=document.getElementById("attDate").value, session=document.getElementById("attSession").value;
- const existing=db.attendance.find(x=>x.date===date&&x.session===session&&x.studentId===id);
- if(existing) existing.status=status;
- updateAttendancePreview();
+
+ pending[id]=status;
+
+ document.querySelectorAll(`#attendanceTable tr`).forEach(()=>{});
+
+ const date=document.getElementById("attDate").value, session=document.getElementById("attSession").value;
+
+ const existing=db.attendance.find(x=>x.date===date&&x.session===session&&x.studentId===id);
+
+ if(existing) existing.status=status;
+
+ updateAttendancePreview();
+
 }
+
 function markAll(status){
- db.students.forEach(s=>pending[s.id]=status);
- const date=document.getElementById("attDate").value, session=document.getElementById("attSession").value;
- db.students.forEach(s=>{
-  let r=db.attendance.find(x=>x.date===date&&x.session===session&&x.studentId===s.id);
-  if(!r){r={id:uid(),date,session,studentId:s.id,status:"",note:""};db.attendance.push(r)}
-  r.status=status;r.updatedAt=new Date().toLocaleString();
- });
- save(); updateAttendancePreview();
+
+ db.students.forEach(s=>pending[s.id]=status);
+
+ const date=document.getElementById("attDate").value, session=document.getElementById("attSession").value;
+
+ db.students.forEach(s=>{
+
+  let r=db.attendance.find(x=>x.date===date&&x.session===session&&x.studentId===s.id);
+
+  if(!r){r={id:uid(),date,session,studentId:s.id,status:"",note:""};db.attendance.push(r)}
+
+  r.status=status;r.updatedAt=new Date().toLocaleString();
+
+ });
+
+ save(); updateAttendancePreview();
+
 }
+
 function saveAttendance(date,session){
- db.students.forEach(s=>{
-   const note=document.getElementById("note-"+s.id)?.value||"";
-   let r=db.attendance.find(x=>x.date===date&&x.session===session&&x.studentId===s.id);
-   if(!r){r={id:uid(),date,session,studentId:s.id,status:pending[s.id]||"",note:""};db.attendance.push(r)}
-   if(pending[s.id]) r.status=pending[s.id];
-   r.note=note;r.updatedAt=new Date().toLocaleString();
- });
- save(); pending={}; alert("本场点名已保存。"); updateAttendancePreview();
+
+ db.students.forEach(s=>{
+
+   const note=document.getElementById("note-"+s.id)?.value||"";
+
+   let r=db.attendance.find(x=>x.date===date&&x.session===session&&x.studentId===s.id);
+
+   if(!r){r={id:uid(),date,session,studentId:s.id,status:pending[s.id]||"",note:""};db.attendance.push(r)}
+
+   if(pending[s.id]) r.status=pending[s.id];
+
+   r.note=note;r.updatedAt=new Date().toLocaleString();
+
+ });
+
+ save(); pending={}; alert("本场点名已保存。"); updateAttendancePreview();
+
 }
+
+
 
 function pageStudents(){
- document.getElementById("page").innerHTML=`
- <div class="card"><h2>学生名单</h2>
- <div class="grid"><div><label>学号</label><input id="newId" placeholder="例如 001"></div><div><label>姓名</label><input id="newName" placeholder="学生姓名"></div><div><label>年级（可选）</label><input id="newGrade" placeholder="例如 中四"></div></div>
- <div class="actions"><button class="btn" onclick="addStudent()">添加学生</button><button class="btn secondary" onclick="exportData()">导出资料</button><button class="btn secondary" onclick="document.getElementById('importFile').click()">导入资料</button><input id="importFile" class="hidden" type="file" accept=".JSON" onchange="importData(event)"></div>
- </div>
- <div class="card"><div class="table-wrap"><table><thead><tr><th>#</th><th>学号</th><th>姓名</th><th>年级</th><th>操作</th></tr></thead><tbody>
- ${db.students.map((s,i)=>`<tr><td>${i+1}</td><td>${esc(s.idNo)}</td><td>${esc(s.name)}</td><td>${esc(s.grade||"")}</td><td><button class="btn danger" onclick="deleteStudent('${s.id}')">删除</button></td></tr>`).join("")||`<tr><td colspan="5" class="center">暂无学生</td></tr>`}
- </tbody></table></div></div>`;
+
+ document.getElementById("page").innerHTML=`
+
+ <div class="card"><h2>学生名单</h2>
+
+ <div class="grid"><div><label>学号</label><input id="newId" placeholder="例如 001"></div><div><label>姓名</label><input id="newName" placeholder="学生姓名"></div><div><label>年级（可选）</label><input id="newGrade" placeholder="例如 中四"></div></div>
+
+ <div class="actions"><button class="btn" onclick="addStudent()">添加学生</button><button class="btn secondary" onclick="exportData()">导出资料</button><button class="btn secondary" onclick="document.getElementById('importFile').click()">导入资料</button><input id="importFile" class="hidden" type="file" accept=".json" onchange="importData(event)"></div>
+
+ </div>
+
+ <div class="card"><div class="table-wrap"><table><thead><tr><th>#</th><th>学号</th><th>姓名</th><th>年级</th><th>操作</th></tr></thead><tbody>
+
+ ${db.students.map((s,i)=>`<tr><td>${i+1}</td><td>${esc(s.idNo)}</td><td>${esc(s.name)}</td><td>${esc(s.grade||"")}</td><td><button class="btn danger" onclick="deleteStudent('${s.id}')">删除</button></td></tr>`).join("")||`<tr><td colspan="5" class="center">暂无学生</td></tr>`}
+
+ </tbody></table></div></div>`;
+
 }
+
 function addStudent(){
- const idNo=document.getElementById("newId").value.trim(), name=document.getElementById("newName").value.trim(), grade=document.getElementById("newGrade").value.trim();
- if(!idNo||!name)return alert("请输入学号和姓名。");
- if(db.students.some(s=>s.idNo===idNo))return alert("这个学号已经存在。");
- db.students.push({id:uid(),idNo,name,grade});save();go("students");
+
+ const idNo=document.getElementById("newId").value.trim(), name=document.getElementById("newName").value.trim(), grade=document.getElementById("newGrade").value.trim();
+
+ if(!idNo||!name)return alert("请输入学号和姓名。");
+
+ if(db.students.some(s=>s.idNo===idNo))return alert("这个学号已经存在。");
+
+ db.students.push({id:uid(),idNo,name,grade});save();go("students");
+
 }
+
 function deleteStudent(id){
- if(!confirm("确定删除这名学生？历史点名记录不会自动删除。"))return;
- db.students=db.students.filter(s=>s.id!==id);save();go("students");
+
+ if(!confirm("确定删除这名学生？历史点名记录不会自动删除。"))return;
+
+ db.students=db.students.filter(s=>s.id!==id);save();go("students");
+
 }
+
+
 
 function pageRecords(){
- document.getElementById("page").innerHTML=`
- <div class="card"><h2>出缺席记录</h2><div class="grid">
- <div><label>学号（可选）</label><input id="recId" placeholder="全部学生"></div>
- <div><label>年份</label><select id="recYear">${years().map(y=>`<option>${y}</option>`).join("")}</select></div>
- <div><label>场次</label><select id="recSession"><option value="">全部</option><option>正课</option><option>留校</option></select></div>
- </div><div class="actions"><button class="btn" onclick="showRecords()">查询</button></div></div>
- <div class="card" id="recordsResult"></div>`;
- showRecords();
+
+ document.getElementById("page").innerHTML=`
+
+ <div class="card"><h2>出缺席记录</h2><div class="grid">
+
+ <div><label>学号（可选）</label><input id="recId" placeholder="全部学生"></div>
+
+ <div><label>年份</label><select id="recYear">${years().map(y=>`<option>${y}</option>`).join("")}</select></div>
+
+ <div><label>场次</label><select id="recSession"><option value="">全部</option><option>正课</option><option>留校</option></select></div>
+
+ </div><div class="actions"><button class="btn" onclick="showRecords()">查询</button></div></div>
+
+ <div class="card" id="recordsResult"></div>`;
+
+ showRecords();
+
 }
+
 function years(){let ys=new Set(["2026",...db.attendance.map(a=>a.date.slice(0,4))]);return [...ys].sort()}
+
 function showRecords(){
- const idNo=document.getElementById("recId").value.trim(), y=document.getElementById("recYear").value, ses=document.getElementById("recSession").value;
- let rows=db.attendance.filter(a=>a.date.startsWith(y)&&(ses===""||a.session===ses)).filter(a=>!idNo||db.students.find(s=>s.id===a.studentId)?.idNo===idNo).sort((a,b)=>b.date.localeCompare(a.date));
- document.getElementById("recordsResult").innerHTML=`<div class="table-wrap"><table><thead><tr><th>日期</th><th>星期</th><th>场次</th><th>学号</th><th>姓名</th><th>状态</th><th>备注</th></tr></thead><tbody>
- ${rows.map(a=>{let s=db.students.find(x=>x.id===a.studentId)||{};return `<tr><td>${esc(fmt(a.date))}</td><td>${esc(weekday(a.date))}</td><td>${esc(a.session)}</td><td>${esc(s.idNo||"")}</td><td>${esc(s.name||"已删除学生")}</td><td>${esc(a.status||"未点名")}</td><td>${esc(a.note||"")}</td></tr>`}).join("")||`<tr><td colspan="7" class="center">没有记录</td></tr>`}
- </tbody></table></div>`;
+
+ const idNo=document.getElementById("recId").value.trim(), y=document.getElementById("recYear").value, ses=document.getElementById("recSession").value;
+
+ let rows=db.attendance.filter(a=>a.date.startsWith(y)&&(ses===""||a.session===ses)).filter(a=>!idNo||db.students.find(s=>s.id===a.studentId)?.idNo===idNo).sort((a,b)=>b.date.localeCompare(a.date));
+
+ document.getElementById("recordsResult").innerHTML=`<div class="table-wrap"><table><thead><tr><th>日期</th><th>星期</th><th>场次</th><th>学号</th><th>姓名</th><th>状态</th><th>备注</th></tr></thead><tbody>
+
+ ${rows.map(a=>{let s=db.students.find(x=>x.id===a.studentId)||{};return `<tr><td>${esc(fmt(a.date))}</td><td>${esc(weekday(a.date))}</td><td>${esc(a.session)}</td><td>${esc(s.idNo||"")}</td><td>${esc(s.name||"已删除学生")}</td><td>${esc(a.status||"未点名")}</td><td>${esc(a.note||"")}</td></tr>`}).join("")||`<tr><td colspan="7" class="center">没有记录</td></tr>`}
+
+ </tbody></table></div>`;
+
 }
+
+
 
 function pageLeaves(){
- document.getElementById("page").innerHTML=`
- <div class="card"><h2>请假信记录</h2>
- <div class="grid"><div><label>学生</label><select id="leaveStudent">${db.students.map(s=>`<option value="${s.id}">${esc(s.idNo)} · ${esc(s.name)}</option>`).join("")}</select></div>
- <div><label>日期</label><input id="leaveDate" type="date" value="${today()}"></div>
- <div><label>场次</label><select id="leaveSession"><option>正课</option><option>留校</option></select></div>
- <div><label>状态</label><select id="leaveStatus"><option>已提交</option><option>未提交</option><option>已批准</option><option>待审核</option></select></div></div>
- <label style="margin-top:10px">备注</label><textarea id="leaveNote" placeholder="例如：家长请假信 / 病假 / 其他"></textarea>
- <div class="actions"><button class="btn" onclick="addLeave()">保存请假记录</button></div>
- </div>
- <div class="card"><div class="table-wrap"><table><thead><tr><th>日期</th><th>星期</th><th>场次</th><th>学号</th><th>姓名</th><th>请假信</th><th>备注</th><th>操作</th></tr></thead><tbody>
- ${db.leaves.sort((a,b)=>b.date.localeCompare(a.date)).map(l=>{let s=db.students.find(x=>x.id===l.studentId)||{};return `<tr><td>${esc(fmt(l.date))}</td><td>${esc(weekday(l.date))}</td><td>${esc(l.session)}</td><td>${esc(s.idNo||"")}</td><td>${esc(s.name||"")}</td><td>${esc(l.status)}</td><td>${esc(l.note||"")}</td><td><button class="btn danger" onclick="deleteLeave('${l.id}')">删除</button></td></tr>`}).join("")||`<tr><td colspan="8" class="center">暂无请假记录</td></tr>`}
- </tbody></table></div></div>`;
+
+ document.getElementById("page").innerHTML=`
+
+ <div class="card"><h2>请假信记录</h2>
+
+ <div class="grid"><div><label>学生</label><select id="leaveStudent">${db.students.map(s=>`<option value="${s.id}">${esc(s.idNo)} · ${esc(s.name)}</option>`).join("")}</select></div>
+
+ <div><label>日期</label><input id="leaveDate" type="date" value="${today()}"></div>
+
+ <div><label>场次</label><select id="leaveSession"><option>正课</option><option>留校</option></select></div>
+
+ <div><label>状态</label><select id="leaveStatus"><option>已提交</option><option>未提交</option><option>已批准</option><option>待审核</option></select></div></div>
+
+ <label style="margin-top:10px">备注</label><textarea id="leaveNote" placeholder="例如：家长请假信 / 病假 / 其他"></textarea>
+
+ <div class="actions"><button class="btn" onclick="addLeave()">保存请假记录</button></div>
+
+ </div>
+
+ <div class="card"><div class="table-wrap"><table><thead><tr><th>日期</th><th>星期</th><th>场次</th><th>学号</th><th>姓名</th><th>请假信</th><th>备注</th><th>操作</th></tr></thead><tbody>
+
+ ${db.leaves.sort((a,b)=>b.date.localeCompare(a.date)).map(l=>{let s=db.students.find(x=>x.id===l.studentId)||{};return `<tr><td>${esc(fmt(l.date))}</td><td>${esc(weekday(l.date))}</td><td>${esc(l.session)}</td><td>${esc(s.idNo||"")}</td><td>${esc(s.name||"")}</td><td>${esc(l.status)}</td><td>${esc(l.note||"")}</td><td><button class="btn danger" onclick="deleteLeave('${l.id}')">删除</button></td></tr>`}).join("")||`<tr><td colspan="8" class="center">暂无请假记录</td></tr>`}
+
+ </tbody></table></div></div>`;
+
 }
+
 function addLeave(){
- const studentId=document.getElementById("leaveStudent").value;
- if(!studentId)return alert("请先添加学生。");
- db.leaves.push({id:uid(),studentId,date:document.getElementById("leaveDate").value,session:document.getElementById("leaveSession").value,status:document.getElementById("leaveStatus").value,note:document.getElementById("leaveNote").value});
- save();go("leaves");
+
+ const studentId=document.getElementById("leaveStudent").value;
+
+ if(!studentId)return alert("请先添加学生。");
+
+ db.leaves.push({id:uid(),studentId,date:document.getElementById("leaveDate").value,session:document.getElementById("leaveSession").value,status:document.getElementById("leaveStatus").value,note:document.getElementById("leaveNote").value});
+
+ save();go("leaves");
+
 }
+
 function deleteLeave(id){if(confirm("确定删除？")){db.leaves=db.leaves.filter(x=>x.id!==id);save();go("leaves")}}
 
+
+
 function pageSettings(){
- document.getElementById("page").innerHTML=`
- <div class="card"><h2>系统设置</h2>
- <div class="grid"><div><label>学校名称</label><input id="school" value="${esc(db.settings.school)}"></div><div><label>社团名称</label><input id="club" value="${esc(db.settings.club)}"></div><div><label>负责人账号</label><input id="adminUser" value="${esc(db.settings.adminUser)}"></div><div><label>负责人新密码</label><input id="adminPass" type="password" placeholder="留空则不修改"></div></div>
- <div class="actions"><button class="btn" onclick="saveSettings()">保存设置</button><button class="btn secondary" onclick="resetDemo()">重置为第一版空白资料</button></div>
- </div>
- <div class="card"><h3>日期规则</h3><p>系统会自动判断星期。Tuesday / Friday 都可以点名；Friday 的「正课」和「留校」是两条独立记录。默认不覆盖旧记录。</p><p>目前资料保存在<strong>这个浏览器</strong>。正式上线多人同步版时，会把资料改放到云端数据库。</p></div>`;
+
+ document.getElementById("page").innerHTML=`
+
+ <div class="card"><h2>系统设置</h2>
+
+ <div class="grid"><div><label>学校名称</label><input id="school" value="${esc(db.settings.school)}"></div><div><label>社团名称</label><input id="club" value="${esc(db.settings.club)}"></div><div><label>负责人账号</label><input id="adminUser" value="${esc(db.settings.adminUser)}"></div><div><label>负责人新密码</label><input id="adminPass" type="password" placeholder="留空则不修改"></div></div>
+
+ <div class="actions"><button class="btn" onclick="saveSettings()">保存设置</button><button class="btn secondary" onclick="resetDemo()">重置为第一版空白资料</button></div>
+
+ </div>
+
+ <div class="card"><h3>日期规则</h3><p>系统会自动判断星期。Tuesday / Friday 都可以点名；Friday 的「正课」和「留校」是两条独立记录。默认不覆盖旧记录。</p><p>目前资料保存在<strong>这个浏览器</strong>。正式上线多人同步版时，会把资料改放到云端数据库。</p></div>`;
+
 }
+
 function saveSettings(){
- db.settings.school=document.getElementById("school").value.trim()||"宽柔中学至达城";
- db.settings.club=document.getElementById("club").value.trim()||"吉他社";
- db.settings.adminUser=document.getElementById("adminUser").value.trim()||"admin";
- const p=document.getElementById("adminPass").value;if(p)db.settings.adminPass=p;
- save();renderAdmin();
+
+ db.settings.school=document.getElementById("school").value.trim()||"宽柔中学至达城";
+
+ db.settings.club=document.getElementById("club").value.trim()||"吉他社";
+
+ db.settings.adminUser=document.getElementById("adminUser").value.trim()||"admin";
+
+ const p=document.getElementById("adminPass").value;if(p)db.settings.adminPass=p;
+
+ save();renderAdmin();
+
 }
+
 function resetDemo(){if(confirm("确定清除所有学生、点名和请假记录？")){db=structuredClone(defaultData);save();render()}}
 
+
+
 function renderStudentSearch(){
- document.getElementById("app").innerHTML=`
- <header><div><h1>${esc(db.settings.school)} · ${esc(db.settings.club)}</h1><small>STUDENT ATTENDANCE CONSOLE</small></div><button class="btn secondary" onclick="render()">负责人入口</button></header>
- <main class="container"><div class="card">
- <h2>学生出缺席查询</h2><p>请输入自己的学号，只会显示该学号的记录。</p>
- <div class="grid"><div><label>学号</label><input id="searchId" placeholder="请输入学号"></div><div><label>年份</label><select id="searchYear">${years().map(y=>`<option>${y}</option>`).join("")}</select></div></div>
- <div class="actions"><button class="btn" onclick="studentResult()">查询</button></div></div><div id="studentResult"></div></main>`;
-}
-function studentResult(){
- const idNo=document.getElementById("searchId").value.trim(), year=document.getElementById("searchYear").value;
- const s=db.students.find(x=>x.idNo===idNo);
- if(!s){document.getElementById("studentResult").innerHTML=`<div class="card notice">找不到这个学号，请确认输入是否正确。</div>`;return}
- const at=db.attendance.filter(a=>a.studentId===s.id&&a.date.startsWith(year));
- const leaves=db.leaves.filter(l=>l.studentId===s.id&&l.date.startsWith(year));
- const counts={出席:0,缺席:0,迟到:0,旷课:0};at.forEach(a=>{if(counts[a.status]!==undefined)counts[a.status]++});
- document.getElementById("studentResult").innerHTML=`
- <div class="card"><h2>${esc(s.name)} · ${esc(s.idNo)}</h2><div class="stat-grid">
- ${Object.entries(counts).map(([k,v])=>`<div class="stat"><b>${v}</b>${k}</div>`).join("")}</div>
- </div>
- <div class="card"><h3>出缺席记录</h3><div class="table-wrap"><table><thead><tr><th>日期</th><th>星期</th><th>场次</th><th>状态</th><th>备注</th><th>请假信</th></tr></thead><tbody>
- ${at.sort((a,b)=>b.date.localeCompare(a.date)).map(a=>{let l=leaves.find(x=>x.date===a.date&&x.session===a.session);return `<tr><td>${esc(fmt(a.date))}</td><td>${esc(weekday(a.date))}</td><td>${esc(a.session)}</td><td>${esc(a.status||"未点名")}</td><td>${esc(a.note||"")}</td><td>${esc(l?.status||"—")}</td></tr>`}).join("")||`<tr><td colspan="6" class="center">暂无点名记录</td></tr>`}
- </tbody></table></div></div>`;
+
+ document.getElementById("app").innerHTML=`
+
+ <header><div><h1>${esc(db.settings.school)} · ${esc(db.settings.club)}</h1><small>STUDENT ATTENDANCE CONSOLE</small></div><button class="btn secondary" onclick="render()">负责人入口</button></header>
+
+ <main class="container"><div class="card">
+
+ <h2>学生出缺席查询</h2><p>请输入自己的学号，只会显示该学号的记录。</p>
+
+ <div class="grid"><div><label>学号</label><input id="searchId" placeholder="请输入学号"></div><div><label>年份</label><select id="searchYear">${years().map(y=>`<option>${y}</option>`).join("")}</select></div></div>
+
+ <div class="actions"><button class="btn" onclick="studentResult()">查询</button></div></div><div id="studentResult"></div></main>`;
+
 }
 
+function studentResult(){
+
+ const idNo=document.getElementById("searchId").value.trim(), year=document.getElementById("searchYear").value;
+
+ const s=db.students.find(x=>x.idNo===idNo);
+
+ if(!s){document.getElementById("studentResult").innerHTML=`<div class="card notice">找不到这个学号，请确认输入是否正确。</div>`;return}
+
+ const at=db.attendance.filter(a=>a.studentId===s.id&&a.date.startsWith(year));
+
+ const leaves=db.leaves.filter(l=>l.studentId===s.id&&l.date.startsWith(year));
+
+ const counts={出席:0,缺席:0,迟到:0,旷课:0};at.forEach(a=>{if(counts[a.status]!==undefined)counts[a.status]++});
+
+ document.getElementById("studentResult").innerHTML=`
+
+ <div class="card"><h2>${esc(s.name)} · ${esc(s.idNo)}</h2><div class="stat-grid">
+
+ ${Object.entries(counts).map(([k,v])=>`<div class="stat"><b>${v}</b>${k}</div>`).join("")}</div>
+
+ </div>
+
+ <div class="card"><h3>出缺席记录</h3><div class="table-wrap"><table><thead><tr><th>日期</th><th>星期</th><th>场次</th><th>状态</th><th>备注</th><th>请假信</th></tr></thead><tbody>
+
+ ${at.sort((a,b)=>b.date.localeCompare(a.date)).map(a=>{let l=leaves.find(x=>x.date===a.date&&x.session===a.session);return `<tr><td>${esc(fmt(a.date))}</td><td>${esc(weekday(a.date))}</td><td>${esc(a.session)}</td><td>${esc(a.status||"未点名")}</td><td>${esc(a.note||"")}</td><td>${esc(l?.status||"—")}</td></tr>`}).join("")||`<tr><td colspan="6" class="center">暂无点名记录</td></tr>`}
+
+ </tbody></table></div></div>`;
+
+}
+
+
+
 function exportData(){
- const blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"});
- const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`guitar-club-backup-${today()}.json`;a.click();URL.revokeObjectURL(a.href);
+
+ const blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"});
+
+ const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`guitar-club-backup-${today()}.json`;a.click();URL.revokeObjectURL(a.href);
+
 }
+
 function importData(e){
- const f=e.target.files[0];if(!f)return;
- const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.students||!x.attendance||!x.leaves)throw Error();db=x;save();alert("资料导入成功。");render()}catch(err){alert("导入失败：JSON 格式不正确。")}};r.readAsText(f);
+
+ const f=e.target.files[0];if(!f)return;
+
+ const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.students||!x.attendance||!x.leaves)throw Error();db=x;save();alert("资料导入成功。");render()}catch(err){alert("导入失败：JSON 格式不正确。")}};r.readAsText(f);
+
 }
+
 function logout(){sessionStorage.removeItem("kca_admin");render()}
+
 render();
+
 </script>
+
 </body>
+
 </html>
