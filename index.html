@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>宽柔中学至达城 · 吉他社 Console</title>
+<!-- 引入 SheetJS 库，用于解析与导出 Excel 文件 -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;background:#f7f7f7;color:#000;font-family:"KaiTi","STKaiti","楷体",serif}
@@ -36,7 +38,7 @@
   .pill{display:inline-block;border:1px solid #000;padding:3px 8px;margin:2px}
   .hidden{display:none!important}
   .center{text-align:center}
-  .login{max-width:430px;margin:70px auto}
+  .login{max-width:430px;margin:50px auto}
   .login h2{text-align:center}
   .muted{color:#555}
   .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
@@ -74,6 +76,7 @@ function render(){
   if(!isLogged()) return renderLogin();
   renderAdmin();
 }
+
 function renderLogin(){
  document.getElementById("app").innerHTML=`
  <div class="login card">
@@ -83,14 +86,18 @@ function renderLogin(){
    <div style="margin-top:20px">
      <label>负责人账号</label><input id="loginUser" value="admin">
      <label style="margin-top:10px">密码</label><input id="loginPass" type="password">
-     <div class="actions"><button class="btn" onclick="login()">登入负责人系统</button><button class="btn secondary" onclick="renderStudentSearch()">学生查询</button></div>
-     <p class="muted">第一版默认账号：admin / guitar2026</p>
+     <div class="actions">
+       <button class="btn" onclick="login()">登入负责人系统</button>
+       <button class="btn secondary" onclick="renderStudentSearch()">学生服务入口</button>
+     </div>
+     <p class="muted">默认负责人账号：admin / guitar2026</p>
    </div>
  </div>`;
 }
+
 function login(){
  if(document.getElementById("loginUser").value===db.settings.adminUser && document.getElementById("loginPass").value===db.settings.adminPass){
-   sessionStorage.setItem("kca_admin","1"); render();
+    sessionStorage.setItem("kca_admin","1"); render();
  } else alert("账号或密码不正确。");
 }
 
@@ -105,7 +112,7 @@ function renderAdmin(){
     <button class="${active==='students'?'active':''}" onclick="go('students')">学生名单</button>
     <button class="${active==='leaves'?'active':''}" onclick="go('leaves')">请假信</button>
     <button class="${active==='settings'?'active':''}" onclick="go('settings')">系统设置</button>
-    <button onclick="renderStudentSearch()">学生查询</button>
+    <button onclick="renderStudentSearch()">学生查询入口</button>
    </div>
    <div id="page"></div>
  </main>`;
@@ -134,6 +141,7 @@ function pageAttendance(){
  <div class="card"><div id="attendanceTable"></div></div>`;
  updateAttendancePreview();
 }
+
 function updateAttendancePreview(){
  const date=document.getElementById("attDate").value, day=weekday(date), session=document.getElementById("attSession").value;
  document.getElementById("attDay").value=day;
@@ -152,17 +160,18 @@ function updateAttendancePreview(){
  document.getElementById("attendanceTable").innerHTML=db.students.length?`
  <div class="table-wrap"><table><thead><tr><th>学号</th><th>姓名</th><th>出缺席</th><th>备注</th><th>更新时间</th></tr></thead><tbody>${rows}</tbody></table></div>
  <div class="actions"><button class="btn" onclick="saveAttendance('${date}','${session}')">保存本场点名</button><button class="btn secondary" onclick="markAll('出席')">全部设为出席</button></div>`:
- `<div class="notice">目前没有学生名单。请先到「学生名单」添加学生。</div>`;
+ `<div class="notice">目前没有学生名单。请先到「学生名单」添加或导入学生。</div>`;
 }
+
 let pending={};
 function setStatus(id,status){
  pending[id]=status;
- document.querySelectorAll(`#attendanceTable tr`).forEach(()=>{});
  const date=document.getElementById("attDate").value, session=document.getElementById("attSession").value;
  const existing=db.attendance.find(x=>x.date===date&&x.session===session&&x.studentId===id);
  if(existing) existing.status=status;
  updateAttendancePreview();
 }
+
 function markAll(status){
  db.students.forEach(s=>pending[s.id]=status);
  const date=document.getElementById("attDate").value, session=document.getElementById("attSession").value;
@@ -173,6 +182,7 @@ function markAll(status){
  });
  save(); updateAttendancePreview();
 }
+
 function saveAttendance(date,session){
  db.students.forEach(s=>{
    const note=document.getElementById("note-"+s.id)?.value||"";
@@ -184,45 +194,85 @@ function saveAttendance(date,session){
  save(); pending={}; alert("本场点名已保存。"); updateAttendancePreview();
 }
 
-function renderStudentSearch(){
-  document.getElementById("app").innerHTML=`
-  <header>
-    <div><h1>${esc(db.settings.school)} · ${esc(db.settings.club)}</h1><small>STUDENT PORTAL</small></div>
-    <button class="btn secondary" onclick="render()">负责人入口</button>
-  </header>
-  <main class="container">
-    <div class="card login" style="margin:20px auto">
-      <h2>学生登录系统</h2>
-      <p class="center muted">请使用学校账号登入以查看个人出缺席</p>
-      
-      <!-- 方案 A：使用学校谷歌账号一键登入（结合 Firebase Auth） -->
-      <div class="actions" style="justify-content:center; margin-top:20px;">
-        <button class="btn" onclick="loginWithGoogle()">使用学校谷歌账号登录 (@foonyew.edu.my)</button>
-      </div>
-
-      <hr style="margin:20px 0; border:none; border-top:1px solid #eee">
-
-      <!-- 方案 B：传统学号 + 密码登入 -->
-      <div>
-        <label>学号</label><input id="studentLoginId" placeholder="例如：230001">
-        <label style="margin-top:10px">密码</label><input id="studentLoginPass" type="password" placeholder="默认密码或身份证后6位">
-        <div class="actions" style="margin-top:15px">
-          <button class="btn secondary" onclick="studentPasswordLogin()">账号密码登入</button>
-        </div>
-      </div>
-    </div>
-    <div id="studentResult"></div>
-  </main>`;
+function pageStudents(){
+ document.getElementById("page").innerHTML=`
+ <div class="card"><h2>学生名单管理</h2>
+ <div class="grid"><div><label>学号</label><input id="newId" placeholder="例如 230001"></div><div><label>姓名</label><input id="newName" placeholder="学生姓名"></div><div><label>年级（可选）</label><input id="newGrade" placeholder="例如 高一1"></div></div>
+ <div class="actions">
+   <button class="btn" onclick="addStudent()">手动添加学生</button>
+   <button class="btn secondary" onclick="exportExcel()">导出为 Excel (.xlsx)</button>
+   <button class="btn secondary" onclick="document.getElementById('importExcelFile').click()">从 Excel 导入学生</button>
+   <input id="importExcelFile" class="hidden" type="file" accept=".xlsx, .xls" onchange="importExcelData(event)">
+ </div>
+ <p class="muted" style="margin-top:10px;font-size:14px;">💡 Excel 表头只需包含：<b>学号</b>、<b>姓名</b>、<b>年级</b> 即可自动读取解析。</p>
+ </div>
+ <div class="card"><div class="table-wrap"><table><thead><tr><th>#</th><th>学号</th><th>姓名</th><th>年级</th><th>操作</th></tr></thead><tbody>
+ ${db.students.map((s,i)=>`<tr><td>${i+1}</td><td>${esc(s.idNo)}</td><td>${esc(s.name)}</td><td>${esc(s.grade||"")}</td><td><button class="btn danger" onclick="deleteStudent('${s.id}')">删除</button></td></tr>`).join("")||`<tr><td colspan="5" class="center">暂无学生名单</td></tr>`}
+ </tbody></table></div></div>`;
 }
+
 function addStudent(){
  const idNo=document.getElementById("newId").value.trim(), name=document.getElementById("newName").value.trim(), grade=document.getElementById("newGrade").value.trim();
  if(!idNo||!name)return alert("请输入学号和姓名。");
  if(db.students.some(s=>s.idNo===idNo))return alert("这个学号已经存在。");
  db.students.push({id:uid(),idNo,name,grade});save();go("students");
 }
+
 function deleteStudent(id){
  if(!confirm("确定删除这名学生？历史点名记录不会自动删除。"))return;
  db.students=db.students.filter(s=>s.id!==id);save();go("students");
+}
+
+/* ==================== Excel 导入导出功能 ==================== */
+function importExcelData(e){
+  const file = e.target.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    try {
+      const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      const excelRows = XLSX.utils.sheet_to_json(worksheet);
+
+      let addCount = 0;
+      excelRows.forEach(row => {
+        const idNo = String(row['学号'] || row['id'] || row['ID'] || '').trim();
+        const name = String(row['姓名'] || row['name'] || '').trim();
+        const grade = String(row['年级'] || row['grade'] || '').trim();
+
+        if (idNo && name) {
+          if (!db.students.some(s => s.idNo === idNo)) {
+            db.students.push({ id: uid(), idNo, name, grade });
+            addCount++;
+          }
+        }
+      });
+
+      save();
+      alert(`导入完成！成功新增 ${addCount} 名学生。`);
+      go("students");
+    } catch (err) {
+      alert("解析 Excel 文件失败，请确认文件格式为 .xlsx 或 .xls");
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function exportExcel(){
+  if(!db.students.length) return alert("目前没有学生名单可导出。");
+  const data = db.students.map((s, index) => ({
+    "序号": index + 1,
+    "学号": s.idNo,
+    "姓名": s.name,
+    "年级": s.grade || ""
+  }));
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "学生名单");
+  XLSX.writeFile(workbook, `吉他社学生名单_${today()}.xlsx`);
 }
 
 function pageRecords(){
@@ -240,14 +290,14 @@ function showRecords(){
  const idNo=document.getElementById("recId").value.trim(), y=document.getElementById("recYear").value, ses=document.getElementById("recSession").value;
  let rows=db.attendance.filter(a=>a.date.startsWith(y)&&(ses===""||a.session===ses)).filter(a=>!idNo||db.students.find(s=>s.id===a.studentId)?.idNo===idNo).sort((a,b)=>b.date.localeCompare(a.date));
  document.getElementById("recordsResult").innerHTML=`<div class="table-wrap"><table><thead><tr><th>日期</th><th>星期</th><th>场次</th><th>学号</th><th>姓名</th><th>状态</th><th>备注</th></tr></thead><tbody>
- ${rows.map(a=>{let s=db.students.find(x=>x.id===a.studentId)||{};return `<tr><td>${esc(fmt(a.date))}</td><td>${esc(weekday(a.date))}</td><td>${esc(a.session)}</td><td>${esc(s.idNo||"")}</td><td>${esc(s.name||"已删除学生")}</td><td>${esc(a.status||"未点名")}</td><td>${esc(a.note||"")}</td></tr>`}).join("")||`<tr><td colspan="7" class="center">没有记录</td></tr>`}
+ ${rows.map(a=>{let s=db.students.find(x=>x.id===a.studentId)||{};return `<tr><td>${esc(fmt(a.date))}</td><td>${esc(weekday(a.date))}</td><td>${esc(a.session)}</td><td>${esc(s.idNo\vert{}\vert{}"")}</td><td>${esc(s.name||"已删除学生")}</td><td>${esc(a.status\vert{}\vert{}"未点名")}</td><td>${esc(a.note||"")}</td></tr>`}).join("")||`<tr><td colspan="7" class="center">没有记录</td></tr>`}
  </tbody></table></div>`;
 }
 
 function pageLeaves(){
  document.getElementById("page").innerHTML=`
  <div class="card"><h2>请假信记录</h2>
- <div class="grid"><div><label>学生</label><select id="leaveStudent">${db.students.map(s=>`<option value="${s.id}">${esc(s.idNo)} · ${esc(s.name)}</option>`).join("")}</select></div>
+ <div class="grid"><div><label>学生</label><select id="leaveStudent">${db.students.map(s=>`<option value="${s.id}">${esc(s.idNo)} ·${esc(s.name)}</option>`).join("")}</select></div>
  <div><label>日期</label><input id="leaveDate" type="date" value="${today()}"></div>
  <div><label>场次</label><select id="leaveSession"><option>正课</option><option>留校</option></select></div>
  <div><label>状态</label><select id="leaveStatus"><option>已提交</option><option>未提交</option><option>已批准</option><option>待审核</option></select></div></div>
@@ -255,7 +305,7 @@ function pageLeaves(){
  <div class="actions"><button class="btn" onclick="addLeave()">保存请假记录</button></div>
  </div>
  <div class="card"><div class="table-wrap"><table><thead><tr><th>日期</th><th>星期</th><th>场次</th><th>学号</th><th>姓名</th><th>请假信</th><th>备注</th><th>操作</th></tr></thead><tbody>
- ${db.leaves.sort((a,b)=>b.date.localeCompare(a.date)).map(l=>{let s=db.students.find(x=>x.id===l.studentId)||{};return `<tr><td>${esc(fmt(l.date))}</td><td>${esc(weekday(l.date))}</td><td>${esc(l.session)}</td><td>${esc(s.idNo||"")}</td><td>${esc(s.name||"")}</td><td>${esc(l.status)}</td><td>${esc(l.note||"")}</td><td><button class="btn danger" onclick="deleteLeave('${l.id}')">删除</button></td></tr>`}).join("")||`<tr><td colspan="8" class="center">暂无请假记录</td></tr>`}
+ ${db.leaves.sort((a,b)=>b.date.localeCompare(a.date)).map(l=>{let s=db.students.find(x=>x.id===l.studentId)||{};return `<tr><td>${esc(fmt(l.date))}</td><td>${esc(weekday(l.date))}</td><td>${esc(l.session)}</td><td>${esc(s.idNo\vert{}\vert{}"")}</td><td>${esc(s.name||"")}</td><td>${esc(l.status)}</td><td>${esc(l.note||"")}</td><td><button class="btn danger" onclick="deleteLeave('${l.id}')">删除</button></td></tr>`}).join("")||`<tr><td colspan="8" class="center">暂无请假记录</td></tr>`}
  </tbody></table></div></div>`;
 }
 function addLeave(){
@@ -270,9 +320,8 @@ function pageSettings(){
  document.getElementById("page").innerHTML=`
  <div class="card"><h2>系统设置</h2>
  <div class="grid"><div><label>学校名称</label><input id="school" value="${esc(db.settings.school)}"></div><div><label>社团名称</label><input id="club" value="${esc(db.settings.club)}"></div><div><label>负责人账号</label><input id="adminUser" value="${esc(db.settings.adminUser)}"></div><div><label>负责人新密码</label><input id="adminPass" type="password" placeholder="留空则不修改"></div></div>
- <div class="actions"><button class="btn" onclick="saveSettings()">保存设置</button><button class="btn secondary" onclick="resetDemo()">重置为第一版空白资料</button></div>
- </div>
- <div class="card"><h3>日期规则</h3><p>系统会自动判断星期。Tuesday / Friday 都可以点名；Friday 的「正课」和「留校」是两条独立记录。默认不覆盖旧记录。</p><p>目前资料保存在<strong>这个浏览器</strong>。正式上线多人同步版时，会把资料改放到云端数据库。</p></div>`;
+ <div class="actions"><button class="btn" onclick="saveSettings()">保存设置</button><button class="btn secondary" onclick="resetDemo()">重置所有数据</button></div>
+ </div>`;
 }
 function saveSettings(){
  db.settings.school=document.getElementById("school").value.trim()||"宽柔中学至达城";
@@ -283,38 +332,59 @@ function saveSettings(){
 }
 function resetDemo(){if(confirm("确定清除所有学生、点名和请假记录？")){db=structuredClone(defaultData);save();render()}}
 
+/* ==================== 学生查询与登录入口 ==================== */
 function renderStudentSearch(){
  document.getElementById("app").innerHTML=`
- <header><div><h1>${esc(db.settings.school)} · ${esc(db.settings.club)}</h1><small>STUDENT ATTENDANCE CONSOLE</small></div><button class="btn secondary" onclick="render()">负责人入口</button></header>
- <main class="container"><div class="card">
- <h2>学生出缺席查询</h2><p>请输入自己的学号，只会显示该学号的记录。</p>
- <div class="grid"><div><label>学号</label><input id="searchId" placeholder="请输入学号"></div><div><label>年份</label><select id="searchYear">${years().map(y=>`<option>${y}</option>`).join("")}</select></div></div>
- <div class="actions"><button class="btn" onclick="studentResult()">查询</button></div></div><div id="studentResult"></div></main>`;
+ <header><div><h1>${esc(db.settings.school)} · ${esc(db.settings.club)}</h1><small>STUDENT PORTAL</small></div><button class="btn secondary" onclick="render()">负责人入口</button></header>
+ <main class="container">
+ <div class="card login" style="margin:20px auto">
+  <h2>学生服务平台登录</h2>
+  <p class="center muted">请登录以查看你的个人出缺席记录</p>
+  
+  <div style="margin-top:20px">
+    <label>输入学号</label>
+    <input id="studentInputId" placeholder="例如：230001">
+    <label style="margin-top:10px">年份</label>
+    <select id="studentInputYear">${years().map(y=>`<option>${y}</option>`).join("")}</select>
+    
+    <div class="actions" style="margin-top:15px">
+      <button class="btn" onclick="studentLoginVerify()">学号验证登入</button>
+      <button class="btn secondary" onclick="loginWithSchoolGoogle()" style="opacity:0.6;" title="接入 Google Firebase 后可启用">使用学校 Google 账号登录</button>
+    </div>
+  </div>
+ </div>
+ <div id="studentResult"></div>
+ </main>`;
 }
-function studentResult(){
- const idNo=document.getElementById("searchId").value.trim(), year=document.getElementById("searchYear").value;
+
+function studentLoginVerify(){
+ const idNo=document.getElementById("studentInputId").value.trim(), year=document.getElementById("studentInputYear").value;
+ if(!idNo) return alert("请输入学号！");
+ studentResult(idNo, year);
+}
+
+function loginWithSchoolGoogle(){
+  alert("提示：学校账号 SSO 单点登录需要在后台连接 Google Firebase Auth 认证服务模块。");
+}
+
+function studentResult(idNo, year){
  const s=db.students.find(x=>x.idNo===idNo);
- if(!s){document.getElementById("studentResult").innerHTML=`<div class="card notice">找不到这个学号，请确认输入是否正确。</div>`;return}
+ if(!s){
+    document.getElementById("studentResult").innerHTML=`<div class="card notice">找不到学号【${esc(idNo)}】的相关数据，请核对后重试。</div>`;
+    return;
+ }
  const at=db.attendance.filter(a=>a.studentId===s.id&&a.date.startsWith(year));
  const leaves=db.leaves.filter(l=>l.studentId===s.id&&l.date.startsWith(year));
  const counts={出席:0,缺席:0,迟到:0,旷课:0};at.forEach(a=>{if(counts[a.status]!==undefined)counts[a.status]++});
  document.getElementById("studentResult").innerHTML=`
- <div class="card"><h2>${esc(s.name)} · ${esc(s.idNo)}</h2><div class="stat-grid">
+ <div class="card"><h2>${esc(s.name)} （学号：${esc(s.idNo)}）</h2><div class="stat-grid">
  ${Object.entries(counts).map(([k,v])=>`<div class="stat"><b>${v}</b>${k}</div>`).join("")}</div>
  </div>
- <div class="card"><h3>出缺席记录</h3><div class="table-wrap"><table><thead><tr><th>日期</th><th>星期</th><th>场次</th><th>状态</th><th>备注</th><th>请假信</th></tr></thead><tbody>
- ${at.sort((a,b)=>b.date.localeCompare(a.date)).map(a=>{let l=leaves.find(x=>x.date===a.date&&x.session===a.session);return `<tr><td>${esc(fmt(a.date))}</td><td>${esc(weekday(a.date))}</td><td>${esc(a.session)}</td><td>${esc(a.status||"未点名")}</td><td>${esc(a.note||"")}</td><td>${esc(l?.status||"—")}</td></tr>`}).join("")||`<tr><td colspan="6" class="center">暂无点名记录</td></tr>`}
+ <div class="card"><h3>出缺席明细记录</h3><div class="table-wrap"><table><thead><tr><th>日期</th><th>星期</th><th>场次</th><th>状态</th><th>备注</th><th>请假记录</th></tr></thead><tbody>
+ ${at.sort((a,b)=>b.date.localeCompare(a.date)).map(a=>{let l=leaves.find(x=>x.date===a.date&&x.session===a.session);return `<tr><td>${esc(fmt(a.date))}</td><td>${esc(weekday(a.date))}</td><td>${esc(a.session)}</td><td>${esc(a.status||"未点名")}</td><td>${esc(a.note\vert{}\vert{}"")}</td><td>${esc(l?.status||"—")}</td></tr>`}).join("")||`<tr><td colspan="6" class="center">暂无点名记录</td></tr>`}
  </tbody></table></div></div>`;
 }
 
-function exportData(){
- const blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"});
- const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`guitar-club-backup-${today()}.json`;a.click();URL.revokeObjectURL(a.href);
-}
-function importData(e){
- const f=e.target.files[0];if(!f)return;
- const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.students||!x.attendance||!x.leaves)throw Error();db=x;save();alert("资料导入成功。");render()}catch(err){alert("导入失败：JSON 格式不正确。")}};r.readAsText(f);
-}
 function logout(){sessionStorage.removeItem("kca_admin");render()}
 render();
 </script>
