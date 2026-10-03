@@ -52,9 +52,13 @@
 <div id="app"></div>
 
 <script>
-// 如果重新生成了 npoint，请把下方地址替换为您新的 npoint 地址
-const API_URL = "https://api.npoint.io/4b62fe95253ec90ef087";
-const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"; // 需替换为 Google Cloud 申请的 Client ID
+// ===== 配置区 =====
+// 请在 JSONBin.io 创建一个 Bin 并将 ID 填写在此处
+const JSONBIN_BIN_ID = "YOUR_JSONBIN_BIN_ID"; 
+const JSONBIN_API_KEY = ""; // 若设为 Private Bin，在此填入 $2a$10$... Master Key；公共 Bin 可留空
+const API_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+
+const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"; 
 const SCHOOL_EMAIL_DOMAIN = "@foonyewsa.edu.my"; 
 const KEY = "kca_console_v1";
 
@@ -85,17 +89,21 @@ function parseJwt(token) {
   }
 }
 
-// 带 3 秒超时与自动恢复功能的云端加载
+// 带 4 秒超时与自动恢复功能的云端加载
 async function load() {
   showLoading(true);
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 3000); // 3秒超时控制
+  const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+  const headers = {};
+  if (JSONBIN_API_KEY) headers["X-Master-Key"] = JSONBIN_API_KEY;
 
   try {
-    const res = await fetch(API_URL, { signal: controller.signal });
+    const res = await fetch(API_URL + "/latest", { headers, signal: controller.signal });
     clearTimeout(timeoutId);
     if (!res.ok) throw new Error("HTTP error " + res.status);
-    const cloudData = await res.json();
+    const result = await res.json();
+    const cloudData = result.record || result; // 兼容 JSONBin 的返回结构
     if (cloudData && typeof cloudData === "object" && cloudData.settings) {
       db = cloudData;
     } else {
@@ -110,7 +118,7 @@ async function load() {
     } catch (err) {}
   } finally {
     clearTimeout(timeoutId);
-    showLoading(false); // 确保关闭加载框
+    showLoading(false);
   }
 }
 
@@ -118,19 +126,22 @@ async function save() {
   localStorage.setItem(KEY, JSON.stringify(db));
   showLoading(true);
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 4000);
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+  const headers = { "Content-Type": "application/json" };
+  if (JSONBIN_API_KEY) headers["X-Master-Key"] = JSONBIN_API_KEY;
 
   try {
     const res = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: "PUT",
+      headers: headers,
       body: JSON.stringify(db),
       signal: controller.signal
     });
     clearTimeout(timeoutId);
     if (!res.ok) throw new Error("云端保存失败");
   } catch (e) {
-    alert("提醒：修改已存入本地，但云端同步未成功，请检查网络或重新配置 npoint！");
+    alert("提醒：修改已存入本地，但云端同步未成功，请检查网络或配置！");
   } finally {
     clearTimeout(timeoutId);
     showLoading(false);
@@ -156,7 +167,7 @@ function renderLogin(){
    <p class="center">🎸 ${esc(db.settings.club)}</p>
    <p class="center"><b>ATTENDANCE CONSOLE</b></p>
    <div style="margin-top:20px">
-     <label>负责人账号</label><input id="loginUser" value="admin">
+     <label>负责人账号</label><input id="loginUser" value="${esc(db.settings.adminUser)}">
      <label style="margin-top:10px">密码</label><input id="loginPass" type="password">
      <div class="actions"><button class="btn" onclick="login()">登入负责人系统</button><button class="btn secondary" onclick="renderStudentSearch()">学生查询</button></div>
    </div>
@@ -165,7 +176,7 @@ function renderLogin(){
 
 function login(){
  if(document.getElementById("loginUser").value===db.settings.adminUser && document.getElementById("loginPass").value===db.settings.adminPass){
-   sessionStorage.setItem("kca_admin","1"); render();
+    sessionStorage.setItem("kca_admin","1"); render();
  } else alert("账号或密码不正确。");
 }
 
@@ -379,55 +390,55 @@ function renderStudentSearch(){
  <main class="container"><div class="card">
  <h2>学生出缺席查询</h2>
  ${!studentUser ? `
-   <p>为了保障隐私，请使用学校官方 Google 账号（<code>${SCHOOL_EMAIL_DOMAIN}</code>）登录：</p>
-   <div style="margin: 15px 0;">
-     <div id="g_id_onload"
-          data-client_id="${GOOGLE_CLIENT_ID}"
-          data-callback="handleGoogleLogin">
-     </div>
-     <div class="g_id_signin" data-type="standard"></div>
-   </div>
+    <p>为了保障隐私，请使用学校官方 Google 账号（<code>${SCHOOL_EMAIL_DOMAIN}</code>）登录：</p>
+    <div style="margin: 15px 0;">
+      <div id="g_id_onload"
+           data-client_id="${GOOGLE_CLIENT_ID}"
+           data-callback="handleGoogleLogin">
+      </div>
+      <div class="g_id_signin" data-type="standard"></div>
+    </div>
  ` : `
-   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background:#f0f0f0; padding:10px; border-radius:4px;">
-     <span>登录身份：<b>${esc(studentUser.name)}</b> (${esc(studentUser.email)})</span>
-     <button class="btn secondary" onclick="studentLogout()">退出登录</button>
-   </div>
-   <div class="grid">
-     <div><label>学号</label><input id="searchId" placeholder="请输入学号" value="${esc(studentUser.defaultIdNo||'')}"></div>
-     <div><label>年份</label><select id="searchYear">${years().map(y=>`<option>${y}</option>`).join("")}</select></div>
-   </div>
-   <div class="actions"><button class="btn" onclick="studentResult()">查询记录</button></div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background:#f0f0f0; padding:10px; border-radius:4px;">
+      <span>登录身份：<b>${esc(studentUser.name)}</b> (${esc(studentUser.email)})</span>
+      <button class="btn secondary" onclick="studentLogout()">退出登录</button>
+    </div>
+    <div class="grid">
+      <div><label>学号</label><input id="searchId" placeholder="请输入学号" value="${esc(studentUser.defaultIdNo||'')}"></div>
+      <div><label>年份</label><select id="searchYear">${years().map(y=>`<option>${y}</option>`).join("")}</select></div>
+    </div>
+    <div class="actions"><button class="btn" onclick="studentResult()">查询记录</button></div>
  `}
  </div><div id="studentResult"></div></main>`;
 
  if (!studentUser && window.google) {
-   google.accounts.id.initialize({
-     client_id: GOOGLE_CLIENT_ID,
-     callback: handleGoogleLogin
-   });
-   google.accounts.id.renderButton(
-     document.querySelector(".g_id_signin"),
-     { theme: "outline", size: "large" }
-   );
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleGoogleLogin
+    });
+    google.accounts.id.renderButton(
+      document.querySelector(".g_id_signin"),
+      { theme: "outline", size: "large" }
+    );
  }
 }
 
 function handleGoogleLogin(response) {
  const payload = parseJwt(response.credential);
  if (!payload || !payload.email) {
-   alert("登录验证失败，请重试。");
-   return;
+    alert("登录验证失败，请重试。");
+    return;
  }
 
  if (!payload.email.endsWith(SCHOOL_EMAIL_DOMAIN)) {
-   alert(`验证失败：请使用学校官方 Google 账号（${SCHOOL_EMAIL_DOMAIN}）登录！`);
-   return;
+    alert(`验证失败：请使用学校官方 Google 账号（${SCHOOL_EMAIL_DOMAIN}）登录！`);
+    return;
  }
 
  const studentData = {
-   email: payload.email,
-   name: payload.name,
-   defaultIdNo: payload.email.split('@')[0]
+    email: payload.email,
+    name: payload.name,
+    defaultIdNo: payload.email.split('@')[0]
  };
  
  sessionStorage.setItem("kca_student", JSON.stringify(studentData));
@@ -465,16 +476,16 @@ function importData(e){
  const f=e.target.files[0];if(!f)return;
  const r=new FileReader();
  r.onload=async()=>{
-   try{
-     const x=JSON.parse(r.result);
-     if(!x.students||!x.attendance||!x.leaves)throw Error();
-     db=x;
-     await save();
-     alert("资料导入并同步成功。");
-     render();
-   }catch(err){
-     alert("导入失败：JSON 格式不正确。");
-   }
+    try{
+      const x=JSON.parse(r.result);
+      if(!x.students||!x.attendance||!x.leaves)throw Error();
+      db=x;
+      await save();
+      alert("资料导入并同步成功。");
+      render();
+    }catch(err){
+      alert("导入失败：JSON 格式不正确。");
+    }
  };
  r.readAsText(f);
 }
