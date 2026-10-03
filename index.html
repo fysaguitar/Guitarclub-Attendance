@@ -40,21 +40,22 @@
   .center{text-align:center}
   .login{max-width:430px;margin:70px auto}
   .login h2{text-align:center}
-  .muted{color:#555}
   .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
   .stat{border:1px solid #aaa;padding:14px;text-align:center;background:#fff}
   .stat b{font-size:25px;display:block}
-  .loading-mask{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.8);display:flex;justify-content:center;align-items:center;font-size:18px;font-weight:bold;z-index:9999}
+  .loading-mask{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.9);display:flex;justify-content:center;align-items:center;font-size:18px;font-weight:bold;z-index:9999}
   @media(max-width:700px){.container{padding:12px}.stat-grid{grid-template-columns:repeat(2,1fr)}header{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
 <body>
 <div id="loading" class="loading-mask">云端数据同步中，请稍候...</div>
 <div id="app"></div>
+
 <script>
+// 如果重新生成了 npoint，请把下方地址替换为您新的 npoint 地址
 const API_URL = "https://api.npoint.io/4b62fe95253ec90ef087";
-const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"; // 需替换为您在 Google Cloud 申请的 Client ID
-const SCHOOL_EMAIL_DOMAIN = "@foonyewsa.edu.my"; // 限制学校域名
+const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"; // 需替换为 Google Cloud 申请的 Client ID
+const SCHOOL_EMAIL_DOMAIN = "@foonyewsa.edu.my"; 
 const KEY = "kca_console_v1";
 
 const defaultData = {
@@ -71,7 +72,6 @@ function showLoading(show) {
   if (el) el.style.display = show ? "flex" : "none";
 }
 
-// 解码 JWT Token
 function parseJwt(token) {
   try {
     const base64Url = token.split('.')[1];
@@ -85,44 +85,54 @@ function parseJwt(token) {
   }
 }
 
-// 从云端加载数据
+// 带 3 秒超时与自动恢复功能的云端加载
 async function load() {
   showLoading(true);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 3000); // 3秒超时控制
+
   try {
-    const res = await fetch(API_URL);
-    if (!res.ok) throw new Error("网络响应异常");
+    const res = await fetch(API_URL, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (!res.ok) throw new Error("HTTP error " + res.status);
     const cloudData = await res.json();
-    db = cloudData && typeof cloudData === "object" ? cloudData : structuredClone(defaultData);
-    if (!db.settings) db.settings = structuredClone(defaultData.settings);
-    if (!db.students) db.students = [];
-    if (!db.attendance) db.attendance = [];
-    if (!db.leaves) db.leaves = [];
+    if (cloudData && typeof cloudData === "object" && cloudData.settings) {
+      db = cloudData;
+    } else {
+      db = structuredClone(defaultData);
+    }
     localStorage.setItem(KEY, JSON.stringify(db));
   } catch (e) {
-    console.warn("读取云端数据失败，读取本地缓存:", e);
+    console.warn("读取云端数据超时或失败，自动切换至本地缓存:", e);
     try {
       const local = localStorage.getItem(KEY);
       if (local) db = JSON.parse(local);
     } catch (err) {}
   } finally {
-    showLoading(false);
+    clearTimeout(timeoutId);
+    showLoading(false); // 确保关闭加载框
   }
 }
 
-// 保存数据至云端
 async function save() {
   localStorage.setItem(KEY, JSON.stringify(db));
   showLoading(true);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 4000);
+
   try {
     const res = await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(db)
+      body: JSON.stringify(db),
+      signal: controller.signal
     });
-    if (!res.ok) throw new Error("云端更新失败");
+    clearTimeout(timeoutId);
+    if (!res.ok) throw new Error("云端保存失败");
   } catch (e) {
-    alert("警告：数据已保存至本地，但云端同步失败，请检查网络后再试！");
+    alert("提醒：修改已存入本地，但云端同步未成功，请检查网络或重新配置 npoint！");
   } finally {
+    clearTimeout(timeoutId);
     showLoading(false);
   }
 }
@@ -341,7 +351,7 @@ function pageSettings(){
  <div class="grid"><div><label>学校名称</label><input id="school" value="${esc(db.settings.school)}"></div><div><label>社团名称</label><input id="club" value="${esc(db.settings.club)}"></div><div><label>负责人账号</label><input id="adminUser" value="${esc(db.settings.adminUser)}"></div><div><label>负责人新密码</label><input id="adminPass" type="password" placeholder="留空则不修改"></div></div>
  <div class="actions"><button class="btn" onclick="saveSettings()">保存设置</button><button class="btn secondary" onclick="resetDemo()">重置为空白资料</button></div>
  </div>
- <div class="card"><h3>日期规则与安全限制</h3><p>学生必须使用宽柔中学至达城分校官方 Google 邮箱（<code>@foonyewsa.edu.my</code>）登录后，方可查询个人出缺席记录。</p></div>`;
+ <div class="card"><h3>安全提示</h3><p>已启用限制：学生须通过校方 Google 邮箱（<code>${SCHOOL_EMAIL_DOMAIN}</code>）登录验证后方可查询本人成绩与考勤。</p></div>`;
 }
 
 async function saveSettings(){
@@ -354,14 +364,13 @@ async function saveSettings(){
 }
 
 async function resetDemo(){
-  if(confirm("确定清除所有学生、点名和请假记录？此操作将同步清空云端！")){
+  if(confirm("确定清除所有数据？此操作将同步清空云端！")){
     db=structuredClone(defaultData);
     await save();
     render();
   }
 }
 
-// 学生登录与查询
 function renderStudentSearch(){
  const studentUser = JSON.parse(sessionStorage.getItem("kca_student") || "null");
 
@@ -370,7 +379,7 @@ function renderStudentSearch(){
  <main class="container"><div class="card">
  <h2>学生出缺席查询</h2>
  ${!studentUser ? `
-   <p>为了保障隐私，请先使用学校官方 Google 账号（<code>${SCHOOL_EMAIL_DOMAIN}</code>）登录以验证身份：</p>
+   <p>为了保障隐私，请使用学校官方 Google 账号（<code>${SCHOOL_EMAIL_DOMAIN}</code>）登录：</p>
    <div style="margin: 15px 0;">
      <div id="g_id_onload"
           data-client_id="${GOOGLE_CLIENT_ID}"
@@ -472,7 +481,6 @@ function importData(e){
 
 function logout(){sessionStorage.removeItem("kca_admin");render()}
 
-// 初始化入口
 (async function init(){
   await load();
   render();
