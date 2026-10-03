@@ -188,7 +188,7 @@ function pageStudents(){
  document.getElementById("page").innerHTML=`
  <div class="card"><h2>学生名单</h2>
  <div class="grid"><div><label>学号</label><input id="newId" placeholder="例如 001"></div><div><label>姓名</label><input id="newName" placeholder="学生姓名"></div><div><label>年级（可选）</label><input id="newGrade" placeholder="例如 中四"></div></div>
- <div class="actions"><button class="btn" onclick="addStudent()">添加学生</button><button class="btn secondary" onclick="exportData()">导出资料</button><button class="btn secondary" onclick="document.getElementById('importFile').click()">导入资料</button><input id="importFile" class="hidden" type="file" accept=".xtml" onchange="importData(event)"></div>
+ <div class="actions"><button class="btn" onclick="addStudent()">添加学生</button><button class="btn secondary" onclick="exportData()">导出资料</button><button class="btn secondary" onclick="document.getElementById('importFile').click()">导入资料</button><input id="importFile" class="hidden" type="file" accept=".xlsx" onchange="importData(event)"></div>
  </div>
  <div class="card"><div class="table-wrap"><table><thead><tr><th>#</th><th>学号</th><th>姓名</th><th>年级</th><th>操作</th></tr></thead><tbody>
  ${db.students.map((s,i)=>`<tr><td>${i+1}</td><td>${esc(s.idNo)}</td><td>${esc(s.name)}</td><td>${esc(s.grade||"")}</td><td><button class="btn danger" onclick="deleteStudent('${s.id}')">删除</button></td></tr>`).join("")||`<tr><td colspan="5" class="center">暂无学生</td></tr>`}
